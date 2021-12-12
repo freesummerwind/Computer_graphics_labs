@@ -1,0 +1,100 @@
+<HTML lang="en">
+<BODY>
+<canvas id="lab05" width="500" height="400" style="border: 1px solid">
+</canvas>
+<script>
+    function Line(x0, y0, x1, y1) {
+        let dx = Math.abs(x1 - x0);
+        let dy = -1 * Math.abs(y1 - y0);
+        let stepx = (x0 < x1 ? 1 : -1);
+        let stepy = (y0 < y1 ? 1 : -1);
+        let error = dx + dy;
+        let check = false;
+        while (!check) {
+            ctx.fillRect(x0, y0, 1, 1);
+            if (2 * error >= dy) {
+                error += dy;
+                x0 += stepx;
+            }
+            if (2 * error <= dx) {
+                error += dx;
+                y0 += stepy;
+            }
+            if (Math.abs(x0 - x1) + Math.abs(y0 - y1) < 2) {
+                check = true;
+            }
+        }
+    }
+</script>
+<script>
+    function fill(points_x, points_y) {
+        let min_y = points_y[0], max_y = points_y[0];
+        for (let i = 0; i < points_y.length; ++i) {
+            if (points_y[i] < min_y) min_y = points_y[i];
+            if (points_y[i] > max_y) max_y = points_y[i];
+        }
+
+        let y_array = [];
+        for (let i = 0; i < points_y.length; ++i) {
+            let next = 0;
+            if (i !== points_y.length - 1)
+                next = i + 1;
+            let up = 0, down = 0;
+            if (points_y[i] > points_y[next]) {
+                up = i;
+                down = next;
+            }
+            else if (points_y[i] < points_y[next]) {
+                up = next;
+                down = i;
+            }
+            else continue;
+
+            let k = (points_y[up] - points_y[down]) / (points_x[up] - points_x[down]);
+            for (let j = points_y[down]; j < points_y[up]; ++j) {
+                if (typeof y_array[j] == "undefined")
+                    y_array[j] = [];
+                y_array[j].push((j - points_y[down])/k + points_x[down]);
+            }
+        }
+
+        for (let y = min_y; y < max_y; ++y) {
+            let x_array = y_array[y].sort(function(a, b) { return a - b; });
+            for (let j = 0; j < x_array.length / 2; ++j) {
+                for (let x = x_array[j * 2]; x < x_array[j * 2 + 1]; ++x) {
+                    ctx.fillRect(Math.floor(x), Math.floor(y), 1, 1);
+                }
+            }
+        }
+    }
+</script>
+<script>
+    let canvas = document.getElementById("lab05");
+    let ctx = canvas.getContext("2d");
+    let x = [];
+    let y = [];
+    let f = false;
+    let k = 0;
+
+    canvas.addEventListener("click", function (event) {
+        if (!f) {
+            x.push(event.offsetX);
+            y.push(event.offsetY);
+            if (k >= 1)
+                Line(x[k - 1], y[k - 1], x[k], y[k]);
+            k++;
+        }
+        else {
+            ctx.fillStyle = "#00aaff";
+            fill(x, y);
+            ctx.fillStyle = "#000000";
+        }
+    });
+    document.addEventListener("keypress", function (event) {
+        f = true;
+        x.push(x[0]);
+        y.push(y[0]);
+        Line(x[k - 1], y[k - 1], x[0], y[0]);
+    });
+</script>
+</BODY>
